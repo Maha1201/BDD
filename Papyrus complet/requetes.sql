@@ -40,7 +40,7 @@ WHERE obscom != '';
 8 :
 SELECT numcom AS Commandes, (qtecde * priuni) AS Total
 FROM ligcom
-ORDER BY Total DESC
+ORDER BY Total DESC;
 
 9 :
 SELECT numcom AS Commandes, (qtecde * priuni) AS Total
@@ -50,21 +50,21 @@ WHERE qtecde < 1000 AND (qtecde * priuni) > 10000;
 10 :
 SELECT nomfou AS NomFournisseur, numcom AS Commandes, datcom AS DateCommande
 FROM fournis
-INNER JOIN entcom ON entcom.numfou = fournis.numfou
+INNER JOIN entcom ON entcom.numfou = fournis.numfou;
 
 11 :
 SELECT entcom.numcom AS Commandes, nomfou AS NomFournisseur, libart AS Libellé, (qtecde * priuni) AS SousTotal
 FROM fournis
 INNER JOIN entcom ON fournis.numfou = entcom.numfou
 INNER JOIN ligcom ON entcom.numcom = ligcom.numcom
-INNER JOIN produit ON produit.codart = ligcom.codart
+INNER JOIN produit ON produit.codart = ligcom.codart;
 
 12 :
 SELECT nomfou, COUNT(DISTINCT vente.codart)
 FROM fournis
 JOIN vente ON fournis.numfou = vente.numfou
 GROUP BY fournis.nomfou
-HAVING COUNT(DISTINCT vente.codart)>1
+HAVING COUNT(DISTINCT vente.codart)>1;
 
 
 ???????????
@@ -79,6 +79,18 @@ WHERE codart IN(
 GROUP BY nomfou;
 
 
+SELECT f.nomfou AS 'Nom du fournisseur', l.numcom AS 'Numéro de commande', l.numlig AS 'Numéro de ligne', l.qteliv AS 'Quantité livrée'
+FROM fournis f
+JOIN entcom e ON f.numfou = e.numfou
+JOIN ligcom l ON e.numcom = l.numcom
+WHERE l.numcom IN (
+    SELECT numcom
+    FROM ligcom
+    WHERE qteliv > 0
+)
+ORDER BY e.numcom ASC, l.numlig ASC;
+
+
 13 :
 SELECT numcom AS Commandes, datcom AS DateCommande
 FROM entcom
@@ -89,13 +101,46 @@ WHERE numfou IN(
 );
 
 SELECT a.numfou, b.*
-FROM entcom AS a INNER JOIN entcom AS b ON a.numfou = b.numfou
+FROM entcom AS a 
+INNER JOIN entcom AS b ON a.numfou = b.numfou
 WHERE a.numcom = '70210';
 
 14 :
-SELECT codart
+///////
+SELECT codart, prix1 AS p1
+FROM vente
+WHERE p1 < p2 AND prix1 IN(
+    SELECT prix1 AS p2
+    FROM produit
+    WHERE codart IN(
+    	SELECT codart
+        FROM produit
+        WHERE codart LIKE 'r%'
+    )
+);
 
-Dans les articles susceptibles d’être vendus, lister les articles moins chers (basés sur Prix1) que le moins cher des rubans (article dont 
-le premier caractère commence par R).
+/////////
+SELECT v.codart, v.prix1 AS p1, p.libart, v.prix AS p2
+FROM vente AS v
+INNER JOIN produit AS p
+WHERE p2 = p.libart LIKE 'r%' AND p1 < p2;
 
-    Afficher libellé de l’article et prix1
+////////
+SELECT libart,prix1 FROM `vente`,`produit`
+WHERE produit.codart = vente.codart AND stkphy > 0 AND 'prix' < (select min(prix1) FROM `vente`,`produit` 
+WHERE produit.codart = vente.codart AND libart  LIKE 'R%' )GROUP BY libart,prix1;
+
+
+SELECT min(prix1) as p2
+FROM produit
+INNER JOIN vente ON vente.codart = produit.codart
+WHERE libart LIKE 'r%'
+
+15 :
+SELECT 
+
+
+
+Sortir la liste des fournisseurs susceptibles de livrer les produits dont le stock est inférieur ou égal à 150 % du stock d'alerte.
+
+    La liste sera triée par produit puis fournisseur
