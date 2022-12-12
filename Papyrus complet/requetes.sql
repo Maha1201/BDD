@@ -66,19 +66,6 @@ JOIN vente ON fournis.numfou = vente.numfou
 GROUP BY fournis.nomfou
 HAVING COUNT(DISTINCT vente.codart)>1;
 
-
-???????????
-SELECT nomfou, COUNT(DISTINCT codart)
-FROM fournis
-INNER JOIN vente ON fournis.numfou = vente.numfou
-WHERE codart IN(
-    SELECT codart
-    FROM vente
-    HAVING COUNT(DISTINCT codart)>1
-)
-GROUP BY nomfou;
-
-
 SELECT f.nomfou AS 'Nom du fournisseur', l.numcom AS 'Numéro de commande', l.numlig AS 'Numéro de ligne', l.qteliv AS 'Quantité livrée'
 FROM fournis f
 JOIN entcom e ON f.numfou = e.numfou
@@ -125,22 +112,47 @@ FROM vente AS v
 INNER JOIN produit AS p
 WHERE p2 = p.libart LIKE 'r%' AND p1 < p2;
 
-////////
-SELECT libart,prix1 FROM `vente`,`produit`
-WHERE produit.codart = vente.codart AND stkphy > 0 AND 'prix' < (select min(prix1) FROM `vente`,`produit` 
-WHERE produit.codart = vente.codart AND libart  LIKE 'R%' )GROUP BY libart,prix1;
-
-
 SELECT min(prix1) as p2
 FROM produit
 INNER JOIN vente ON vente.codart = produit.codart
-WHERE libart LIKE 'r%'
+WHERE libart LIKE 'r%';
 
 15 :
-SELECT 
+SELECT numfou
+FROM vente
+WHERE codart IN (
+    SELECT codart
+    FROM produit
+    WHERE stkphy <= (stkale * 1.5)
+);
 
+16 :
+SELECT numfou, delliv
+FROM vente
+WHERE codart IN (
+    SELECT codart
+    FROM produit
+    WHERE stkphy <= (stkale * 1.5) AND delliv < 31
+);
 
+17 :
+SELECT vente.numfou, produit.stkphy
+FROM vente 
+INNER JOIN produit ON vente.codart = produit.codart
+GROUP BY vente.numfou
+ORDER BY stkphy DESC;
 
-Sortir la liste des fournisseurs susceptibles de livrer les produits dont le stock est inférieur ou égal à 150 % du stock d'alerte.
+18 :
+SELECT codart, libart
+FROM produit
+WHERE codart IN(
+    SELECT codart
+    FROM ligcom
+    WHERE qtecde > qteann * 0.9
+)
 
-    La liste sera triée par produit puis fournisseur
+19 :
+SELECT numfou, qtecde * priuni * 0.2 AS CA
+FROM ligcom
+INNER JOIN entcom ON entcom.numcom = ligcom.numcom
+GROUP BY numfou
